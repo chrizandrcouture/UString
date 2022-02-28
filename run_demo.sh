@@ -12,6 +12,8 @@ FEAT_FILE="$DIR/$VID"_feature.npz
 RESULT_FILE="$DIR/$VID"_result.npz
 VIS_FILE="$DIR/$VID"_vis.avi
 
+conda innit bash
+
 if [ ! -f "$RESULT_FILE" ]; then
     if [ ! -f "$FEAT_FILE" ]; then
         # feature extraction task
@@ -36,7 +38,8 @@ if [ ! -f "$RESULT_FILE" ]; then
         --task inference \
         --feature_file $FEAT_FILE \
         --ckpt_file demo/final_model_ccd.pth \
-        --gpu_id $GPUS
+        --gpu_id $GPUS \
+        --video_file $VIDEO_PATH
     # source ~/anaconda3/etc/profile.d/conda.sh
     conda deactivate
     echo "Saved in: $RESULT_FILE"

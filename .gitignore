@@ -10,6 +10,9 @@ src/__pycache__
 script/savedlogs
 script/res
 data/mmdetection*
+Cascade R-CNN/
+*.npz
+*.avi
 *.mp4
 *_tmp*
 lib/*

@@ -4,6 +4,7 @@ from __future__ import print_function
 
 import numpy as np
 import cv2
+import pdb
 import os, sys
 import os.path as osp
 import argparse
@@ -12,6 +13,8 @@ import torch.nn as nn
 from torchvision import models, transforms
 from PIL import Image
 import matplotlib.pyplot as plt
+from tqdm import tqdm
+
 
 class VGG16(nn.Module):
     def __init__(self):
@@ -101,7 +104,9 @@ def extract_features(detector, feat_extractor, video_file, n_frames=100, n_boxes
     features = np.zeros((n_frames, n_boxes + 1, feat_extractor.dim_feat), dtype=np.float32)
     detections = np.zeros((n_frames, n_boxes, 6))  # (50 x 19 x 6)
     frame_prev = None
-    for idx in range(n_frames):
+    print(video_file)
+    print(n_frames, len(videoReader))
+    for idx in tqdm(range(n_frames)):
         if idx >= len(videoReader):
             print("Copy frame from previous time step.")
             frame = frame_prev.copy()
@@ -335,6 +340,11 @@ if __name__ == '__main__':
     p = parser.parse_args()
 
     set_random_seed(p.seed)
+    cap = cv2.VideoCapture(p.video_file)
+    p.fps = int(cap.get(cv2.CAP_PROP_FPS))
+    p.n_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    print(p.fps, p.n_frames)
+    p.fps_display = p.fps
 
     device = torch.device('cuda:'+str(p.gpu_id)) if torch.cuda.is_available() else torch.device('cpu')
     if p.task == 'extract_feature':
@@ -354,6 +364,7 @@ if __name__ == '__main__':
         from src.Models import UString
         # load feature file
         features, labels, graph_edges, edge_weights, toa, detections, vid = load_input_data(p.feature_file, device=device)
+        pdb.set_trace()
         # prepare model
         model = init_accident_model(p.ckpt_file, dim_feature=features.shape[-1], n_frames=p.n_frames, fps=p.fps)
         with torch.no_grad():
@@ -388,7 +399,7 @@ if __name__ == '__main__':
 
         # create video writer
         video_writer = cv2.VideoWriter(p.vis_file, cv2.VideoWriter_fourcc(*'DIVX'), p.fps_display, (video_data[0].shape[1], video_data[0].shape[0]))
-        for t, frame in enumerate(video_data):
+        for t, frame in enumerate(tqdm(video_data)):
             det_boxes = detections[t]  # 19 x 6
             for box in det_boxes:
                 if box[4] > 0:
